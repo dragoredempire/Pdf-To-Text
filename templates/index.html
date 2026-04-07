@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PDF OCR to Text</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6fb;
+      margin: 0;
+      padding: 2rem;
+    }
+    .container {
+      max-width: 840px;
+      margin: auto;
+      background: #fff;
+      padding: 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.08);
+    }
+    h1 { margin-top: 0; }
+    button {
+      background: #2563eb;
+      border: none;
+      color: white;
+      padding: .6rem 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    button:disabled { background: #9ca3af; cursor: not-allowed; }
+    #result {
+      width: 100%;
+      min-height: 280px;
+      margin-top: 1rem;
+      padding: .9rem;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      white-space: pre-wrap;
+      background: #f8fafc;
+      overflow: auto;
+    }
+    .muted { color: #475569; font-size: .95rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>PDF to Text (OCR)</h1>
+    <p class="muted">Upload one PDF file, then OCR text will appear below.</p>
+
+    <form id="uploadForm">
+      <input type="file" id="fileInput" name="file" accept="application/pdf" required />
+      <button type="submit" id="submitBtn">Convert</button>
+    </form>
+
+    <h3>Result</h3>
+    <div id="result">No result yet.</div>
+  </div>
+
+  <script>
+    const form = document.getElementById('uploadForm');
+    const result = document.getElementById('result');
+    const submitBtn = document.getElementById('submitBtn');
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      const fileInput = document.getElementById('fileInput');
+      if (!fileInput.files.length) {
+        result.textContent = 'Please choose a PDF file.';
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('file', fileInput.files[0]);
+
+      submitBtn.disabled = true;
+      result.textContent = 'Running OCR... please wait.';
+
+      try {
+        const response = await fetch('/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          result.textContent = data.error || 'Upload failed.';
+          return;
+        }
+
+        result.textContent = data.text;
+      } catch (error) {
+        result.textContent = `Error: ${error.message}`;
+      } finally {
+        submitBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
